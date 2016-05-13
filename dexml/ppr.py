@@ -18,3 +18,20 @@ def get_spline_generator(k, s):
         return yhat, dyhat_dx
 
     return fit_spline
+
+
+def initialize_w(M, p):
+    """Return the random starting weights."""
+    w = [np.random.uniform(-1, 1, p) for i in xrange(M)]
+    return w
+
+
+def ppr_sose(X, y, w, g):
+    """Sum of squared error for a projection pursuit regressor."""
+    yhat_total = np.zeros(len(y))
+    for wm in w:
+        ridge_vec = np.dot(wm, X)
+        ridge_fn_output = g(y, ridge_vec)[0]
+        yhat_total += ridge_fn_output
+
+    return np.sum((y - yhat_total)**2)
