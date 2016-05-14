@@ -22,7 +22,7 @@ def get_spline_generator(k, s):
 
 def initialize_w(M, p):
     """Return the random starting weights."""
-    w = [np.random.uniform(-1, 1, p) for i in xrange(M)]
+    w = np.array([np.random.uniform(-1, 1, p) for i in xrange(M)])
     return w
 
 
