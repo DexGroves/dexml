@@ -13,8 +13,8 @@ def get_spline_generator(k, s):
     """
 
     def fit_spline(x, y):
-        yhat = UnivariateSpline(x, y, k = k, s = s)(x)
-        dyhat_dx = UnivariateSpline(x, y, k = k, s = s).derivative(1)(x)
+        yhat = UnivariateSpline(x, y, k=k, s=s)(x)
+        dyhat_dx = UnivariateSpline(x, y, k=k, s=s).derivative(1)(x)
         return yhat, dyhat_dx
 
     return fit_spline
