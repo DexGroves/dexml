@@ -1,6 +1,6 @@
 from dexml.ols import ols
 import numpy as np
-
+from sklearn import linear_model
 
 p = 5
 n = 100
@@ -19,3 +19,14 @@ def test_ols_agrees_with_numpy():
     numpy_B, _, _, _ = np.linalg.lstsq(X, y)
 
     assert np.allclose(dexml_B, numpy_B)
+
+
+def test_weighted_ols_agrees_with_scikit():
+    w = np.random.uniform(0, 1, n)
+
+    dexml_B = ols(X, y, w)
+
+    clf = linear_model.LinearRegression(fit_intercept=False)
+    scikit_B = clf.fit(X, y, w).coef_
+
+    assert np.allclose(dexml_B, scikit_B)
