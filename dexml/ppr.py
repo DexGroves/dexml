@@ -36,11 +36,8 @@ def initialize_w(M, p):
 
 
 def ppr_sose(X, y, w, g):
-    """Sum of squared error for a projection pursuit regressor."""
-    yhat_total = np.zeros(len(y))
-    for wm in w:
-        ridge_vec = np.dot(wm, X)
-        ridge_fn_output = g(y, ridge_vec)
-        yhat_total += ridge_fn_output
+    """Sum of squared error for a M=1 projection pursuit regressor."""
+    ridge_vec = np.dot(w, X.T)
+    ridge_fn_output = g(ridge_vec)
 
-    return np.sum((y - yhat_total)**2)
+    return np.sum((y - ridge_fn_output)**2)
