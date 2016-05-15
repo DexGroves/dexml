@@ -6,6 +6,24 @@ from scipy.interpolate import UnivariateSpline
 from dexml.ols import ols
 
 
+class ProjectionPursuitRegressor(object):
+    """Hold logic for PPR models."""
+    def __init__(self, w, g):
+        if len(g) == 0:
+            self.g = [g]
+        else:
+            self.g = g
+
+        self.w = np.atleast_2d(w)
+
+    def predict(self, X):
+        total = 0
+        for i, w_i in enumerate(self.w):
+            ridge_vec = self.g[i](np.dot(w_i, X.T))
+            total += ridge_vec
+        return total
+
+
 def fit_ppr(X, y, fit_spline, M=1, w=None, g=None, eps=1e-8):
     """Fit a projection pursuit model."""
     if w is None:
@@ -28,7 +46,7 @@ def fit_ppr(X, y, fit_spline, M=1, w=None, g=None, eps=1e-8):
 
         iteration_error = ppr_sose(X, y, w, g)
 
-    return w, g
+    return ProjectionPursuitRegressor(w, g)
 
 
 def ppr_predict(X, w, g):

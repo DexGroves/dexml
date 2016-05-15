@@ -32,7 +32,7 @@ def test_fit_ppr_reduces_error_for_m_ge_1():
     g = [update_g(X, y, w_i, fit_spline) for w_i in w]
 
     initial_error = ppr_sose(X, y, w, g)
-    w, g = fit_ppr(X, y, fit_spline, w=w, g=g)
-    fitted_error = ppr_sose(X, y, w, g)
+    ppr_model = fit_ppr(X, y, fit_spline, w=w, g=g)
+    fitted_error = ppr_sose(X, y, ppr_model.w, ppr_model.g)
 
     assert fitted_error < initial_error
