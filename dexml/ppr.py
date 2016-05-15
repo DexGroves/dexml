@@ -39,6 +39,11 @@ def update_g(X, y, w, fit_spline):
 
 def ppr_sose(X, y, w, g):
     """Sum of squared error for a projection pursuit regressor."""
+    yhat = ppr_predict(X, w, g)
+    return np.sum((y - yhat)**2)
+
+
+def ppr_predict(X, w, g):
     w = np.atleast_2d(w)
 
     total = 0
@@ -46,4 +51,4 @@ def ppr_sose(X, y, w, g):
         ridge_vec = g[i](np.dot(w_i, X.T))
         total += ridge_vec
 
-    return np.sum((y - total)**2)
+    return total
