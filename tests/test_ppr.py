@@ -9,7 +9,6 @@ np.random.seed(1234)
 
 y = np.random.normal(0, 1, n)
 X = np.random.rand(n, p) - 0.5  # No intercept
-
 fit_spline = fit_spline_generator(2, None)
 
 
@@ -24,3 +23,16 @@ def test_ppr_reduces_error_for_m_eq_1():
     updated_error = ppr_sose(X, y, w_t, g_t)
 
     assert updated_error < starting_error
+
+
+def test_fit_ppr_reduces_error_for_m_ge_1():
+    M = 2
+
+    w = initialize_w(M, p)
+    g = [update_g(X, y, w_i, fit_spline) for w_i in w]
+
+    initial_error = ppr_sose(X, y, w, g)
+    w, g = fit_ppr(X, y, fit_spline, w=w, g=g)
+    fitted_error = ppr_sose(X, y, w, g)
+
+    assert fitted_error < initial_error
