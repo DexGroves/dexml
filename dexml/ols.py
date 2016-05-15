@@ -2,7 +2,7 @@ import numpy as np
 
 
 def ols(X, y, w=None):
-    """Weighted OLS with linear algebra. Big memory footprint."""
+    """Weighted least squares with linear algebra. Big memory footprint."""
     if w is None:
         w = np.ones(len(y))
 
