@@ -4,6 +4,7 @@
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 from dexml.ols import ols
+from dexml.utils import sose
 
 
 class ProjectionPursuitRegressor(object):
@@ -32,7 +33,8 @@ def fit_ppr(X, y, fit_spline, M=1, w=None, g=None, eps=1e-8):
     g = [update_g(X, y, w_i, fit_spline) for w_i in w]
 
     last_error = np.inf
-    iteration_error = ppr_sose(X, y, w, g)
+    iteration_prediction = ppr_predict(X, w, g)
+    iteration_error = sose(y, iteration_prediction)
 
     while (last_error - iteration_error > eps):
         last_error = iteration_error
@@ -44,7 +46,8 @@ def fit_ppr(X, y, fit_spline, M=1, w=None, g=None, eps=1e-8):
             w[i] = update_weights(X, y_residual, w[i], g[i])
             g[i] = update_g(X, y_residual, w[i], fit_spline)
 
-        iteration_error = ppr_sose(X, y, w, g)
+        iteration_prediction = ppr_predict(X, w, g)
+        iteration_error = sose(y, iteration_prediction)
 
     return ProjectionPursuitRegressor(w, g)
 
@@ -91,9 +94,3 @@ def fit_spline_generator(k, s):
         return UnivariateSpline(x, y, k=k, s=s)
 
     return fit_spline
-
-
-def ppr_sose(X, y, w, g):
-    """Sum of squared error for a projection pursuit regressor."""
-    yhat = ppr_predict(X, w, g)
-    return np.sum((y - yhat)**2)

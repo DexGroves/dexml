@@ -1,4 +1,5 @@
 from dexml.ppr import *
+from dexml.utils import sose
 import numpy as np
 
 
@@ -16,13 +17,16 @@ def test_ppr_reduces_error_for_m_eq_1():
     w_t = initialize_w(1, p)
     g_t = [update_g(X, y, w_t, fit_spline)]
 
-    starting_error = ppr_sose(X, y, w_t, g_t)
+    initial_pred = ppr_predict(X, w_t, g_t)
+    initial_error = sose(y, initial_pred)
 
     w_t = update_weights(X, y, w_t, g_t[0])
     g_t[0] = update_g(X, y, w_t, fit_spline)
-    updated_error = ppr_sose(X, y, w_t, g_t)
 
-    assert updated_error < starting_error
+    updated_pred = ppr_predict(X, w_t, g_t)
+    updated_error = sose(y, updated_pred)
+
+    assert updated_error < initial_error
 
 
 def test_fit_ppr_reduces_error_for_m_ge_1():
@@ -31,8 +35,11 @@ def test_fit_ppr_reduces_error_for_m_ge_1():
     w = initialize_w(M, p)
     g = [update_g(X, y, w_i, fit_spline) for w_i in w]
 
-    initial_error = ppr_sose(X, y, w, g)
+    initial_pred = ProjectionPursuitRegressor(w, g).predict(X)
+    initial_error = sose(y, initial_pred)
+
     ppr_model = fit_ppr(X, y, fit_spline, w=w, g=g)
-    fitted_error = ppr_sose(X, y, ppr_model.w, ppr_model.g)
+    fitted_pred = ppr_model.predict(X)
+    fitted_error = sose(y, fitted_pred)
 
     assert fitted_error < initial_error
