@@ -46,6 +46,9 @@ def ppr_sose(X, y, w, g):
 def ppr_predict(X, w, g):
     w = np.atleast_2d(w)
 
+    if len(g) == 0:
+        g = [g]
+
     total = 0
     for i, w_i in enumerate(w):
         ridge_vec = g[i](np.dot(w_i, X.T))
