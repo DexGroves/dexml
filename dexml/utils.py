@@ -1,3 +1,6 @@
+"""General reusable data bits."""
+
+
 import numpy as np
 
 

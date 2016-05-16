@@ -1,3 +1,8 @@
+"""Weighted Least Squares.
+Taken from Elements of Statistical Learning.
+"""
+
+
 import numpy as np
 
 

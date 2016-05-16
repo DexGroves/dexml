@@ -1,4 +1,6 @@
-"""Attempting to implement Projection Pursuit Regression from ESL."""
+"""Projection Pursuit Regression.
+Taken from Elements of Statistical Learning.
+"""
 
 
 import numpy as np
