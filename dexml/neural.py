@@ -25,50 +25,95 @@ class BackPropagator(object):
         self.X = X
         self.y = y
 
+        self.n = X.shape[1]
+        self.M = M
+        self.K = 1
+        self.p = p
+
         self.act_fn = act_fn
         self.act_fn_deriv = act_fn_deriv
         self.gamma = gamma
 
-        self.alpha = self.initialize_w(M, p)
-        self.beta = self.initialize_w(M, 1)
+        self.alpha = self.initialize_w(n_neurons=M, n_inputs=p)
+        self.beta = self.initialize_w(n_neurons=self.K, n_inputs=M)
 
     def update_weights(self):
         # Forward pass
-        Zm = self.update_Zm(self.X)
-        Tk = self.update_Tk(Zm)
-        fkX = np.sum(Tk, axis=0)
+        Zm = self.update_Zm(self.alpha, self.X)
+        Tk = self.update_Tk(self.beta, Zm)
+        fkX = Tk   # More activation here later?
 
         # Backwards pass
         dki = self.update_dki(fkX, Zm)
-        smi = self.update_smi(dki)
+        smi = self.update_smi(dki, self.alpha, self.beta)
+
+        # Gradients
+        alpha_grad = self.get_alpha_gradient(smi, self.X)
+        beta_grad = self.get_beta_gradient(dki, Zm)
 
         # Update weights
-        beta_delta = np.dot(dki, Zm.T)
-        alpha_delta = np.dot(smi, self.X)
+        self.beta = self.beta - (self.gamma * np.sum(beta_grad, axis=0))
+        self.alpha = self.alpha - (self.gamma * np.sum(alpha_grad, axis=0))
 
-        self.beta = self.beta - (self.gamma * beta_delta.T)
-        self.alpha = self.alpha - (self.gamma * alpha_delta)
+    def update_Zm(self, alpha, X):
+        Zm = []
+        for alpha_m in alpha:
+            aTX = np.dot(alpha_m, X)
+            Zm.append(self.act_fn(aTX))
 
-    def update_Zm(self, X):
-        Zm = np.array([self.act_fn(np.dot(alpha_i, X.T))
-                       for i, alpha_i in enumerate(self.alpha)])
-        return Zm
+        return np.array(Zm)
 
-    def update_Tk(self, Zm):
-        Tk = np.array([Zm[i] * beta_i
-                       for i, beta_i in enumerate(self.beta)])
-        return Tk
+    def update_Tk(self, beta, Zm):
+        Tk = []
+        for beta_k in beta:
+            bTZ = np.dot(beta_k, Zm)
+            Tk.append(bTZ)
+
+        return np.array(Tk)
 
     def update_dki(self, fkX, Zm):
-        BTz = np.dot(self.beta.T, Zm)
-        dki = -2 * (self.y - fkX) * BTz
+        dki = -2 * (self.y - fkX)
         return dki
 
-    def update_smi(self, dki):
-        lhs = self.act_fn_deriv(np.dot(self.alpha, self.X.T))
-        rhs = self.beta * dki
-        return lhs * rhs
+    def update_smi(self, dki, alpha, beta):
+        smi = []
+        for i in xrange(self.n):
+            sm = []
+            for m, alpha_m in enumerate(alpha):
+                aTx = np.dot(alpha_m, X[:,i])
+                lhs = self.act_fn_deriv(aTx)
+
+                rhs = []
+                for k, beta_k in enumerate(beta):
+                    bTd = (beta_k[m] * dki[k][i])
+                    rhs.append(bTd)
+                rhs = np.sum(rhs)
+
+                sm.append(lhs * rhs)
+            smi.append(np.array(sm))
+
+        return np.array(smi)
+
+    def get_alpha_gradient(self, smi, X):
+        alpha_grad = np.zeros((self.n, self.M, self.p))
+        for i, m, l in itertools.product(
+            xrange(self.n), xrange(self.M), xrange(1, self.p)):
+            alpha_grad[i, m, l] = smi[i][m] * X[l, i]
+        return alpha_grad
+
+    def get_beta_gradient(self, dki, Zm):
+        beta_grad = np.zeros((self.n, self.K, self.M))
+        for i, k, m in itertools.product(
+            xrange(self.n), xrange(self.K), xrange(1, self.M)):
+            beta_grad[i, k, m] = dki[k][i] * Zm[m][i]
+        return beta_grad
+
+    def predict(self, X):
+        Zm = self.update_Zm(self.alpha, X)
+        Tk = self.update_Tk(self.beta, Zm)
+        return Tk[0]
 
     @staticmethod
-    def initialize_w(M, p):
-        return np.array([np.random.uniform(-0.1, 0.1, p) for i in xrange(M)])
+    def initialize_w(n_neurons, n_inputs):
+        return np.array([np.random.uniform(-0.1, 0.1, n_inputs)
+                         for i in xrange(n_neurons)])
