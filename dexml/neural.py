@@ -2,6 +2,7 @@
 
 
 import numpy as np
+import itertools
 
 
 class SingleLayeredPerceptron(object):
@@ -80,7 +81,7 @@ class BackPropagator(object):
         for i in xrange(self.n):
             sm = []
             for m, alpha_m in enumerate(alpha):
-                aTx = np.dot(alpha_m, X[:,i])
+                aTx = np.dot(alpha_m, self.X[:,i])
                 lhs = self.act_fn_deriv(aTx)
 
                 rhs = []
