@@ -11,42 +11,64 @@ class SingleLayeredPerceptron(object):
     """
 
     def __init__(self,
-                 p,
-                 M=None,
-                 act_fn=np.tanh,
-                 act_fn_deriv=lambda z: 1/np.cosh(z)):
+                 X,
+                 y,
+                 M=2,
+                 act_fn=None,
+                 act_fn_deriv=None,
+                 gamma=0.01):
 
-        self.back_propagator = BackPropagator(p, M, act_fn, act_fn_deriv)
+        if act_fn is None or act_fn_deriv is None:
+            act_fn=lambda x: 1.0/(1+np.exp(-x))
+            act_fn_deriv=lambda x: (np.exp(-1*x) / ((1+np.exp(-1*x))**2))
+
+        self.bp = BackPropagator(X,
+                                 y,
+                                 M,
+                                 act_fn,
+                                 act_fn_deriv,
+                                 gamma)
+
+    def fit(self, n_iter = 1000):
+        for i in xrange(n_iter):
+            self.bp.update_weights()
+
+    def predict(self, X):
+        Zm = self.bp.get_Zm(self.bp.alpha, X)
+        Tk = self.bp.get_Tk(self.bp.beta, Zm)
+        return Tk[0]
 
 
 class BackPropagator(object):
     """Handle updating the weights of an SLP."""
 
-    def __init__(self, X, y, p, M, act_fn, act_fn_deriv, gamma=0.01):
+    def __init__(self, X, y, M, act_fn, act_fn_deriv, gamma=0.01):
         self.X = X
         self.y = y
 
         self.n = X.shape[1]
+        self.p = X.shape[0]
         self.M = M
         self.K = 1
-        self.p = p
 
         self.act_fn = act_fn
         self.act_fn_deriv = act_fn_deriv
         self.gamma = gamma
 
-        self.alpha = self.initialize_w(n_neurons=M, n_inputs=p)
+        self.alpha = self.initialize_w(n_neurons=M, n_inputs=self.p)
         self.beta = self.initialize_w(n_neurons=self.K, n_inputs=M)
 
     def update_weights(self):
         # Forward pass
-        Zm = self.update_Zm(self.alpha, self.X)
-        Tk = self.update_Tk(self.beta, Zm)
+        Zm = self.get_Zm(self.alpha, self.X)
+        Tk = self.get_Tk(self.beta, Zm)
         fkX = Tk   # More activation here later?
 
+        self.error = (self.y - fkX)**2
+
         # Backwards pass
-        dki = self.update_dki(fkX, Zm)
-        smi = self.update_smi(dki, self.alpha, self.beta)
+        dki = self.get_dki(fkX, Zm)
+        smi = self.get_smi(dki, self.alpha, self.beta)
 
         # Gradients
         alpha_grad = self.get_alpha_gradient(smi, self.X)
@@ -56,7 +78,7 @@ class BackPropagator(object):
         self.beta = self.beta - (self.gamma * np.sum(beta_grad, axis=0))
         self.alpha = self.alpha - (self.gamma * np.sum(alpha_grad, axis=0))
 
-    def update_Zm(self, alpha, X):
+    def get_Zm(self, alpha, X):
         Zm = []
         for alpha_m in alpha:
             aTX = np.dot(alpha_m, X)
@@ -64,7 +86,7 @@ class BackPropagator(object):
 
         return np.array(Zm)
 
-    def update_Tk(self, beta, Zm):
+    def get_Tk(self, beta, Zm):
         Tk = []
         for beta_k in beta:
             bTZ = np.dot(beta_k, Zm)
@@ -72,11 +94,11 @@ class BackPropagator(object):
 
         return np.array(Tk)
 
-    def update_dki(self, fkX, Zm):
+    def get_dki(self, fkX, Zm):
         dki = -2 * (self.y - fkX)
         return dki
 
-    def update_smi(self, dki, alpha, beta):
+    def get_smi(self, dki, alpha, beta):
         smi = []
         for i in xrange(self.n):
             sm = []
@@ -108,11 +130,6 @@ class BackPropagator(object):
             xrange(self.n), xrange(self.K), xrange(1, self.M)):
             beta_grad[i, k, m] = dki[k][i] * Zm[m][i]
         return beta_grad
-
-    def predict(self, X):
-        Zm = self.update_Zm(self.alpha, X)
-        Tk = self.update_Tk(self.beta, Zm)
-        return Tk[0]
 
     @staticmethod
     def initialize_w(n_neurons, n_inputs):
