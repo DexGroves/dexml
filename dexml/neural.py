@@ -79,20 +79,10 @@ class BackPropagator(object):
         self.alpha = self.alpha - (self.gamma * np.sum(alpha_grad, axis=0))
 
     def get_Zm(self, alpha, X):
-        Zm = []
-        for alpha_m in alpha:
-            aTX = np.dot(alpha_m, X)
-            Zm.append(self.act_fn(aTX))
-
-        return np.array(Zm)
+        return self.act_fn(np.dot(alpha, X))
 
     def get_Tk(self, beta, Zm):
-        Tk = []
-        for beta_k in beta:
-            bTZ = np.dot(beta_k, Zm)
-            Tk.append(bTZ)
-
-        return np.array(Tk)
+        return np.dot(beta, Zm)
 
     def get_dki(self, fkX, Zm):
         dki = -2 * (self.y - fkX)
