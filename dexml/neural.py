@@ -4,6 +4,7 @@ With help from https://github.com/stephencwelch/Neural-Networks-Demystified
 
 
 from scipy import optimize
+from dexml.utils import logistic, logistic_prime
 import numpy as np
 
 
@@ -34,9 +35,8 @@ class SingleLayeredPerceptron(object):
         self.hidden = Layer(p, M)
         self.output = Layer(M, 1)
 
-        self.sigma = lambda x: 1.0 / (1 + np.exp(-x))
-        self.sigma_prime = lambda x: (np.exp(-1 * x) /
-                                      ((1 + np.exp(-1 * x))**2))
+        self.sigma = logistic
+        self.sigma_prime = logistic_prime
 
     def forward(self, X):
         self.z2 = np.dot(X, self.hidden.W)
@@ -96,10 +96,6 @@ class BFGSTrainer(object):
 
         return _res
 
-    def cost_function(self, X, y):
-        yhat = self.slp.forward(X)
-        return np.sum((y - yhat)**2)
-
     def cost_and_grad(self, weights, X, y):
         self.slp.set_weights(weights)
 
@@ -107,3 +103,7 @@ class BFGSTrainer(object):
         grad = self.slp.get_gradients(X, y)
 
         return cost, grad
+
+    def cost_function(self, X, y):
+        yhat = self.slp.forward(X)
+        return np.sum((y - yhat)**2)
