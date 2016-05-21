@@ -48,7 +48,7 @@ class SingleLayeredPerceptron(object):
         return self.a3
 
     def backward(self, X, y):
-        delta3 = np.multiply(-(y - self.z3), self.sigma_prime(self.z3))
+        delta3 = np.multiply(-(y - self.a3), self.sigma_prime(self.z3))
         self.dJdW2 = np.dot(self.a2.T, delta3)
 
         delta2 = np.dot(delta3, self.output.W.T) * self.sigma_prime(self.z2)
