@@ -83,7 +83,7 @@ class BFGSTrainer(object):
     def fit(self, X, y, method='BFGS'):
         weights0 = self.slp.get_weights()
 
-        options = {'maxiter': 200, 'disp': True}
+        options = {'maxiter': 1000, 'disp': True}
 
         _res = optimize.minimize(self.cost_and_grad,
                                  weights0,

@@ -1,22 +1,31 @@
 import numpy as np
 from dexml.neural import *
 
-p = 3
+
+def sigma(x):
+    return 1.0 / (1 + np.exp(-x))
+
+
+p = 2
 N = 100
 M = 2
 np.random.seed(2345)
 
-X = np.random.rand(p, N) - 0.5
-X[0] = np.ones(N)
-y = X[1] + X[2] + np.random.normal(0, 0.2, N)
+X = np.random.rand(N, p) - 0.5
+y = sigma(X[:, 0] + 2 * X[:, 1])
+y = np.atleast_2d(y).T
 
 
-def test_slp_fitting_reduces_error():
-    slp = SingleLayeredPerceptron(X, y, 2, gamma = 0.01)
+def test_slp_reduces_train_error():
+    slp = SingleLayeredPerceptron(p, M)
+    trainer = BFGSTrainer(slp)
 
-    initial_error = np.sum((slp.predict(X) - y) ** 2)
+    yh = trainer.slp.forward(X)
+    initial_error = np.sum((yh - y)**2)
 
-    slp.fit(100)
-    fitted_error = np.sum((slp.predict(X) - y) ** 2)
+    fit_result = trainer.fit(X, y, 'BFGS')
+    yh = trainer.slp.forward(X)
+    fitted_error = np.sum((yh - y)**2)
 
     assert fitted_error < initial_error
+    assert fit_result['success']
