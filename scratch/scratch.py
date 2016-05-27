@@ -64,15 +64,15 @@ class NeuralNetwork(object):
         As_rev.append(X)
 
         delta0 = np.multiply(-(y - As_rev[0]), self.sigma_prime(Zs_rev[0]))
-        djdw0 = np.dot(As_rev[1], delta0)
+        djdw0 = np.dot(As_rev[1].T, delta0)
 
         self.deltas = [delta0]
         self.djdws = [djdw0]
 
         for i in xrange(0, len(layers_rev) - 1):
-            delta_n = np.dot(delta0, layers_rev[i].W) * \
+            delta_n = np.dot(self.deltas[i], layers_rev[i].W.T) * \
                 self.sigma_prime(Zs_rev[i + 1])
-            djdw_n = np.dot(As_rev[i + 2], delta_n)
+            djdw_n = np.dot(As_rev[i + 2].T, delta_n)
 
             self.deltas.append(delta_n)
             self.djdws.append(djdw_n)
