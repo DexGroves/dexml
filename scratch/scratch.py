@@ -20,7 +20,7 @@ class Layer(object):
         return np.dot(X, self.W)
 
     def get_weights(self):
-        return self.W.ravel
+        return self.W.ravel()
 
     def set_weights(self, Wflat):
         self.W = np.reshape(Wflat, (self.P, self.M))
@@ -77,6 +77,9 @@ class NeuralNetwork(object):
             self.deltas.append(delta_n)
             self.djdws.append(djdw_n)
 
+        self.deltas = list(reversed(self.deltas))
+        self.djdws = list(reversed(self.djdws))
+
     def instantiate_layers(self):
         layers = [Layer(self.P, self.Ms[0], self.sigma)]
 
@@ -90,19 +93,54 @@ class NeuralNetwork(object):
         flat_weights = [layer.get_weights() for layer in self.layers]
         return np.concatenate(flat_weights)
 
-    def set_flat_weights(self, weights):
-        i = 0
-        for i, layer in enumerate(self.layers):
-            self.layers[i].set_weights(weights[i:layer.n_weights])
-            i += layer.n_weights
-
     def get_gradients(self):
         flat_grads = [djdw.ravel() for djdw in self.djdws]
         return np.concatenate(flat_grads)
 
+    def set_flat_weights(self, weights):
+        iw = 0
+        for i, layer in enumerate(self.layers):
+            self.layers[i].set_weights(weights[iw:(iw + layer.n_weights)])
+            iw += layer.n_weights
 
 
-p = 2
+class BFGSTrainer(object):
+    """Train an MLP with BFGS."""
+    def __init__(self, mlp):
+        self.mlp = mlp
+
+    def fit(self, X, y, method='BFGS'):
+        weights0 = self.mlp.get_flat_weights()
+
+        options = {'maxiter': 1000, 'disp': True}
+
+        _res = optimize.minimize(self.cost_and_grad,
+                                 weights0,
+                                 jac=True,
+                                 method=method,
+                                 args=(X, y),
+                                 options=options)
+
+        self.mlp.set_flat_weights(_res.x)
+
+        return _res
+
+    def cost_and_grad(self, weights, X, y):
+        self.mlp.set_flat_weights(weights)
+
+        yhat = self.mlp.prop_forward(X)
+        self.mlp.prop_backward(X, y)
+
+        cost = self.cost_function(y, yhat)
+        grad = self.mlp.get_gradients()
+
+        return cost, grad
+
+    @staticmethod
+    def cost_function(y, yhat):
+        return np.sum((y - yhat)**2)
+
+p = 3
 N = 100
 M = 2
 np.random.seed(2345)
@@ -111,14 +149,32 @@ X = np.random.rand(N, p) - 0.5
 # y set_weights sigma(np.atleast_2d(X[:, 1] + 2 * X[:, 2])).T
 # + np.random.normal(0, 0.2, N)).T
 # y = np.zeros(N)
-# y[X[:, 1] > 0] get_gradients(self):
-# = 1
+# y[X[:, 1] > 0] = 1
 y = logistic(np.random.normal(0, 1, N))
 y = np.atleast_2d(y).T
 
-nn = NeuralNetwork(p, [3, 3], logistic, logistic_prime)
-nn.prop_forward(X)
+nn = NeuralNetwork(p, [5, 6], logistic, logistic_prime)
+
+trainer = BFGSTrainer(nn)
+
+trainer.fit(X, y)
+
+nn = NeuralNetwork(p, [5, 6], logistic, logistic_prime)
+yhat = nn.prop_forward(X)
 nn.prop_backward(X, y)
+
+nn.get_flat_weights()
+nn.set_flat_weights(range(46))
+nn.get_flat_weights()
+nn.get_gradients()
+# error = np.sum((yhat - y)**2)
+# print error
+# w = nn.get_flat_weights()
+# dw = nn.get_gradients()
+# new_w = w - (dw * 0.001)
+# nn.set_flat_weights(new_w)
+
+
 
 # slp = SingleLayeredPerceptron(p, M)
 
