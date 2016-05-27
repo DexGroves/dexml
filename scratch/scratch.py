@@ -48,37 +48,42 @@ class NeuralNetwork(object):
         self.Zs = [Z1]
         self.As = [A1]
 
-        for i, layer in self.layers[1:]:
+        for i, layer in enumerate(self.layers[1:]):
             Zn = np.dot(self.As[i], layer.W)
             An = self.sigma(Zn)
 
             self.Zs.append(Zn)
             self.As.append(An)
 
+        return An
+
     def prop_backward(self, X, y):
-        layers_rev = reversed(self.layers)
-        Zs_rev = reversed(self.Zs)
-        As_rev = reversed(self.As)
+        layers_rev = list(reversed(self.layers))
+        Zs_rev = list(reversed(self.Zs))
+        As_rev = list(reversed(self.As))
         As_rev.append(X)
 
         delta0 = np.multiply(-(y - As_rev[0]), self.sigma_prime(Zs_rev[0]))
-        djdw0 = np.dot(self.As_rev[1], delta0)
+        djdw0 = np.dot(As_rev[1], delta0)
 
         self.deltas = [delta0]
         self.djdws = [djdw0]
 
         for i in xrange(0, len(layers_rev) - 1):
-            delta_n = np.dot(delta0, layers_rev[i]) * \
+            delta_n = np.dot(delta0, layers_rev[i].W) * \
                 self.sigma_prime(Zs_rev[i + 1])
-            djdw_n = np.dot(self.As_rev[i + 2], delta_n)
+            djdw_n = np.dot(As_rev[i + 2], delta_n)
 
             self.deltas.append(delta_n)
             self.djdws.append(djdw_n)
 
     def instantiate_layers(self):
-        layers = []
-        for i in xrange(self.Ms - 1):
+        layers = [Layer(self.P, self.Ms[0], self.sigma)]
+
+        for i in xrange(len(self.Ms) - 1):
             layers.append(Layer(self.Ms[i], self.Ms[i + 1], self.sigma))
+
+        layers.append(Layer(self.Ms[i + 1], self.K, self.sigma))
         return layers
 
     def get_flat_weights(self):
@@ -96,43 +101,6 @@ class NeuralNetwork(object):
         return np.concatenate(flat_grads)
 
 
-class BFGSTrainer(object):
-    """Train an SLP with BFGS."""
-    def __init__(self, slp):
-        self.slp = slp
-
-    def fit(self, X, y, method='BFGS'):
-        weights0 = self.slp.get_weights()
-
-        options = {'maxiter': 1000, 'disp': True}
-
-        _res = optimize.minimize(self.cost_and_grad,
-                                 weights0,
-                                 jac=True,
-                                 method=method,
-                                 args=(X, y),
-                                 options=options)
-
-        self.slp.set_weights(_res.x)
-
-        return _res
-
-    def cost_and_grad(self, weights, X, y):
-        self.slp.set_weights(weights)
-
-        cost = self.cost_function(X, y)
-        grad = self.slp.get_gradients(X, y)
-
-        return cost, grad
-
-    def cost_function(self, X, y):
-        yhat = self.slp.forward(X)
-        return np.sum((y - yhat)**2)
-
-
-def sigma(x):
-    return 1.0 / (1 + np.exp(-x))
-
 
 p = 2
 N = 100
@@ -142,31 +110,36 @@ np.random.seed(2345)
 X = np.random.rand(N, p) - 0.5
 # y set_weights sigma(np.atleast_2d(X[:, 1] + 2 * X[:, 2])).T
 # + np.random.normal(0, 0.2, N)).T
-y = np.zeros(N)
-y[X[:, 1] > 0] get_gradients(self):
-= 1
+# y = np.zeros(N)
+# y[X[:, 1] > 0] get_gradients(self):
+# = 1
+y = logistic(np.random.normal(0, 1, N))
 y = np.atleast_2d(y).T
 
-slp = SingleLayeredPerceptron(p, M)
-
-yh = slp.forward(X)
-np.sum((yh - y)**2)
-
-trainer = BFGSTrainer(slp)
-trainer.fit(X, y)
-
-yh = slp.forward(X)
-np.sum((yh - y)**2)
-
-# trainer.cost_and_grad(trainer.slp.get_weights(), X, y)
-
+nn = NeuralNetwork(p, [3, 3], logistic, logistic_prime)
+nn.prop_forward(X)
+nn.prop_backward(X, y)
 
 # slp = SingleLayeredPerceptron(p, M)
+
+# yh = slp.forward(X)
+# np.sum((yh - y)**2)
+
 # trainer = BFGSTrainer(slp)
-# w = trainer.slp.get_weights()
-# w
-# np.sum((slp.forward(X) - y)**2)
-# trainer.slp.set_weights(w - 0.01)
-# w = trainer.slp.get_weights()
-# w
-# np.sum((slp.forward(X) - y)**2)
+# trainer.fit(X, y)
+
+# yh = slp.forward(X)
+# np.sum((yh - y)**2)
+
+# # trainer.cost_and_grad(trainer.slp.get_weights(), X, y)
+
+
+# # slp = SingleLayeredPerceptron(p, M)
+# # trainer = BFGSTrainer(slp)
+# # w = trainer.slp.get_weights()
+# # w
+# # np.sum((slp.forward(X) - y)**2)
+# # trainer.slp.set_weights(w - 0.01)
+# # w = trainer.slp.get_weights()
+# # w
+# # np.sum((slp.forward(X) - y)**2)
