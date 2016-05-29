@@ -138,12 +138,14 @@ class BFGSTrainer(object):
 
     @staticmethod
     def cost_function(y, yhat):
-        return np.sum((y - yhat)**2)
+        return np.sum((y - yhat)**2) / 2
+
 
 p = 3
 N = 100
 M = 2
 np.random.seed(2345)
+
 
 X = np.random.rand(N, p) - 0.5
 # y set_weights sigma(np.atleast_2d(X[:, 1] + 2 * X[:, 2])).T
