@@ -1,5 +1,5 @@
 import numpy as np
-from dexml.neural import *
+from dexml.slp import *
 
 
 def sigma(x):
