@@ -1,3 +1,6 @@
+"""WIP coordinate descender for GLMnet implementation later."""
+
+
 import numpy as np
 
 
@@ -37,4 +40,3 @@ class CoordinateDescender(object):
                 break
 
         return params
-
