@@ -36,6 +36,8 @@ class NeuralNetwork(object):
         self.K = 1
         self.Ms = Ms
 
+        self.depth = len(Ms)
+
         self.sigma = sigma
         self.sigma_prime = sigma_prime
 
@@ -82,11 +84,12 @@ class NeuralNetwork(object):
 
     def instantiate_layers(self):
         layers = [Layer(self.P, self.Ms[0], self.sigma)]
+        final_layer = Layer(self.Ms[self.depth - 1], self.K, self.sigma)
 
         for i in xrange(len(self.Ms) - 1):
             layers.append(Layer(self.Ms[i], self.Ms[i + 1], self.sigma))
 
-        layers.append(Layer(self.Ms[i + 1], self.K, self.sigma))
+        layers.append(final_layer)
         return layers
 
     def get_flat_weights(self):
@@ -141,34 +144,44 @@ class BFGSTrainer(object):
         return np.sum((y - yhat)**2) / 2
 
 
+from dexml.neural import SingleLayeredPerceptron
+from dexml.neural import BFGSTrainer as SLPTrainer
+
+
+np.random.seed(2345)
+
 p = 3
 N = 100
-M = 2
-np.random.seed(2345)
+M = 5
 
 
 X = np.random.rand(N, p) - 0.5
-# y set_weights sigma(np.atleast_2d(X[:, 1] + 2 * X[:, 2])).T
-# + np.random.normal(0, 0.2, N)).T
 # y = np.zeros(N)
 # y[X[:, 1] > 0] = 1
-y = logistic(np.random.normal(0, 1, N))
+# y = logistic(np.random.normal(0, 1, N))
+y = X[:, 0] + 0.5 * X[:, 1] + 2 * X[:, 2]
+y = logistic(y)
 y = np.atleast_2d(y).T
 
-nn = NeuralNetwork(p, [5, 6], logistic, logistic_prime)
-
+nn = NeuralNetwork(p, [M, M], logistic, logistic_prime)
 trainer = BFGSTrainer(nn)
+fit_result = trainer.fit(X, y)
 
-trainer.fit(X, y)
 
-nn = NeuralNetwork(p, [5, 6], logistic, logistic_prime)
-yhat = nn.prop_forward(X)
-nn.prop_backward(X, y)
+slp = SingleLayeredPerceptron(p, M)
+slp_trainer = SLPTrainer(slp)
+yh = slp_trainer.slp.forward(X)
+initial_error = np.sum((yh - y)**2)
+slp_result = slp_trainer.fit(X, y, 'BFGS')
 
-nn.get_flat_weights()
-nn.set_flat_weights(range(46))
-nn.get_flat_weights()
-nn.get_gradients()
+# nn = NeuralNetwork(p, [5], logistic, logistic_prime)
+# yhat = nn.prop_forward(X)
+# nn.prop_backward(X, y)
+
+# nn.get_flat_weights()
+# nn.set_flat_weights(range(46))
+# nn.get_flat_weights()
+# nn.get_gradients()
 # error = np.sum((yhat - y)**2)
 # print error
 # w = nn.get_flat_weights()

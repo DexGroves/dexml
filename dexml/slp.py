@@ -68,11 +68,11 @@ class SingleLayeredPerceptron(object):
     def set_weights(self, weights):
         alpha_start = 0
         alpha_end = self.M * self.p
-        self.hidden.set_W(np.reshape(
-            weights[alpha_start:alpha_end], (self.p, self.M)))
+        self.hidden.set_W(
+            np.reshape(weights[alpha_start:alpha_end], (self.p, self.M)))
         beta_end = alpha_end + self.M * self.K
-        self.output.set_W(np.reshape(
-            weights[alpha_end:beta_end], (self.M, self.K)))
+        self.output.set_W(
+            np.reshape(weights[alpha_end:beta_end], (self.M, self.K)))
 
 
 class BFGSTrainer(object):
