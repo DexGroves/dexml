@@ -21,7 +21,7 @@ def test_slp_reduces_train_error():
     trainer = BFGSTrainer(nn)
 
     initial_error = np.sum((y - nn.prop_forward(X))**2) / 2
-    trainer.fit(X, y)
+    fit_result = trainer.fit(X, y)
     final_error = np.sum((y - nn.prop_forward(X))**2) / 2
 
     assert final_error < initial_error
