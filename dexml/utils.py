@@ -14,3 +14,8 @@ def logistic(z):
 
 def logistic_prime(z):
     return (np.exp(-1 * z) / ((1 + np.exp(-1 * z))**2))
+
+
+def euclidian_distance(x, y):
+    diff = x - y
+    return np.sqrt(sum([d**2 for d in diff]))
