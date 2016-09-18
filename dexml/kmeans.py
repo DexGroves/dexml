@@ -24,8 +24,13 @@ class KMeans(object):
 
     def fit(self):
         """Call fit_iterate until convergence."""
+        old_closest_c = np.zeros(self.X.shape[0])
         for i in range(self.maxiter):
             self.fit_iterate()
+            if np.array_equal(self.closest_c, old_closest_c):
+                break
+            else:
+                old_closest_c = self.closest_c
 
     def fit_iterate(self):
         """Update cluster membership and cluster centers once."""
