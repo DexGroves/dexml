@@ -37,7 +37,7 @@ class CART(object):
         if type(best_split) is TerminalNode:
             return best_split
         else:
-            j, s, c_left, c_right = best_split
+            j, s = best_split
 
         left_split = X[:, j] <= X[s, j]
         right_split = X[:, j] > X[s, j]
@@ -101,7 +101,7 @@ class GaussCART(CART):
                     np.sum((c_right - y[right_split])**2)
 
                 if err_js < min_error:
-                    best_split = (j, s, c_left, c_right)
+                    best_split = (j, s)
                     min_error = err_js
 
         return best_split
