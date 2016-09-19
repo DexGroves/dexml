@@ -35,7 +35,7 @@ class CART(object):
 
         best_split = self.find_best_split(X, y)
 
-        if best_split == (-1, -1, -1, -1):
+        if type(best_split) is TerminalNode:
             return TerminalNode()  # Forced, data split to one row
         else:
             j, s, c_left, c_right = best_split
@@ -86,9 +86,9 @@ class GaussCART(CART):
         best_split = (0, 0)
         for j, xp in enumerate(X.T):
             if type(xp) is not np.ndarray:
-                return (-1, -1, -1, -1)
+                return TerminalNode()
 
-            for s, xpi in enumerate(xp[:-1]):
+            for s, xpi in enumerate(xp):
                 left_split = xp <= xpi
                 right_split = xp > xpi
 
