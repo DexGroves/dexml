@@ -26,3 +26,17 @@ def test_cart_d1_agrees_with_scikit():
     sk_error = np.round(sose(y, sk_pred), 6)
 
     assert d_error == sk_error
+
+
+def test_cart_d3_agrees_with_scikit():
+    d_cart = GaussCART(X, y, 3)
+    d_pred = d_cart.predict(X)
+
+    sk_cart = tree.DecisionTreeRegressor(max_depth=3)
+    sk_cart = sk_cart.fit(X, y)
+    sk_pred = sk_cart.predict(X)
+
+    d_error = np.round(sose(y, d_pred), 6)
+    sk_error = np.round(sose(y, sk_pred), 6)
+
+    assert d_error == sk_error
