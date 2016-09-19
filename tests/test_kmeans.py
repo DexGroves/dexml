@@ -15,7 +15,7 @@ def test_kmeans_agrees_with_scikit():
     sk_model = SKMeans(n_clusters=2, random_state=seed)
     sk_pred = sk_model.fit_predict(X)
 
-    dexml_model = DKMeans(X, y, K, seed)
+    dexml_model = DKMeans(X, K, seed)
     dexml_pred = dexml_model.predict(X)
 
     assert_array_equal(sk_pred, dexml_pred)
