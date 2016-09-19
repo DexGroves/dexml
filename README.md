@@ -5,3 +5,4 @@ Learning ML algorithm internals by writing them from scratch
   - Multi-layered perceptrons
   - Projection-pursuit regression
   - Ordinary least squares
+  - K-means
