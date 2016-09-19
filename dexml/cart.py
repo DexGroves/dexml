@@ -8,16 +8,15 @@ import numpy as np
 
 class TerminalNode(object):
     """Represent the end state of a node."""
-    pass
+    def __init__(self, c):
+        self.c = c
 
 
 class SplitNode(object):
     """Represent the split state of a node."""
-    def __init__(self, j, s, c_left, c_right, g_left, g_right):
+    def __init__(self, j, s, g_left, g_right):
         self.j = j
         self.s = s
-        self.c_left = c_left
-        self.c_right = c_right
         self.g_left = g_left
         self.g_right = g_right
 
@@ -31,12 +30,12 @@ class CART(object):
 
     def fit(self, X, y, depth=0):
         if depth == self.max_depth:
-            return TerminalNode()
+            return TerminalNode(self.fit_constant(y))
 
         best_split = self.find_best_split(X, y)
 
         if type(best_split) is TerminalNode:
-            return TerminalNode()  # Forced, data split to one row
+            return best_split
         else:
             j, s, c_left, c_right = best_split
 
@@ -52,7 +51,7 @@ class CART(object):
         g_left = self.fit(X_left, y_left, depth + 1)
         g_right = self.fit(X_right, y_right, depth + 1)
 
-        return SplitNode(j, s, c_left, c_right, g_left, g_right)
+        return SplitNode(j, s, g_left, g_right)
 
     def predict(self, X, tree=None):
         yhat = np.zeros(X.shape[0])
@@ -61,7 +60,7 @@ class CART(object):
             tree = self.tree
 
         if type(tree) is TerminalNode:
-            return yhat
+            return np.repeat(tree.c, X.shape[0])
 
         left_split = X[:, tree.j] <= X[tree.s, tree.j]
         right_split = X[:, tree.j] > X[tree.s, tree.j]
@@ -69,8 +68,8 @@ class CART(object):
         X_left = X[left_split, ]
         X_right = X[right_split, ]
 
-        yhat[left_split] = tree.c_left + self.predict(X_left, tree.g_left)
-        yhat[right_split] = tree.c_right + self.predict(X_right, tree.g_right)
+        yhat[left_split] = self.predict(X_left, tree.g_left)
+        yhat[right_split] = self.predict(X_right, tree.g_right)
 
         return yhat
 
@@ -82,11 +81,11 @@ class GaussCART(CART):
         """Scan over ALL X values to find the row, col split that
         minimises Gaussian error.
         """
-        best_error = np.inf
+        min_error = np.inf
         best_split = (0, 0)
         for j, xp in enumerate(X.T):
             if type(xp) is not np.ndarray:
-                return TerminalNode()
+                return TerminalNode(self.fit_constant(y))
 
             for s, xpi in enumerate(xp):
                 left_split = xp <= xpi
@@ -101,8 +100,9 @@ class GaussCART(CART):
                 err_js = np.sum((c_left - y[left_split])**2) + \
                     np.sum((c_right - y[right_split])**2)
 
-                if err_js < best_error:
+                if err_js < min_error:
                     best_split = (j, s, c_left, c_right)
+                    min_error = err_js
 
         return best_split
 
